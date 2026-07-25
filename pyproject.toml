@@ -1,0 +1,30 @@
+[project]
+name = "conduit-python-client"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Janco Yspeert", email = "janco.h.yspeert@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "aio-pika>=10.0.1",
+    "conduit-protocol",
+    "jsonschema>=4.26.0",
+    "pydantic>=2.13.4",
+]
+
+[build-system]
+requires = ["uv_build>=0.11.32,<0.12.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "mypy>=2.3.0",
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+    "ruff>=0.16.0",
+]
+
+[tool.uv.sources]
+conduit-protocol = { git = "https://github.com/Conduit-Events/conduit-protocol" }
