@@ -28,3 +28,7 @@ dev = [
 
 [tool.uv.sources]
 conduit-protocol = { git = "https://github.com/Conduit-Events/conduit-protocol" }
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+addopts = "--import-mode=importlib"
