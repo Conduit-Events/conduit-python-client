@@ -24,6 +24,7 @@ dev = [
     "pytest>=9.1.1",
     "pytest-asyncio>=1.4.0",
     "ruff>=0.16.0",
+    "types-jsonschema>=4.26.0.20260518",
 ]
 
 [tool.uv.sources]
@@ -32,3 +33,6 @@ conduit-protocol = { git = "https://github.com/Conduit-Events/conduit-protocol" 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 addopts = "--import-mode=importlib"
+
+[tool.mypy]
+plugins = ["pydantic.mypy"]

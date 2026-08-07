@@ -1,9 +1,11 @@
-import pytest
 import json
-from pydantic import ValidationError
-from jsonschema import validate
+
 import conduit_protocol
-from conduit_python_client.envelope import Meta, Message
+import pytest
+from jsonschema import validate
+from pydantic import ValidationError
+
+from conduit_python_client.envelope import Message, Meta
 
 
 def valid_meta_kwargs(**overrides: object) -> dict[str, object]:

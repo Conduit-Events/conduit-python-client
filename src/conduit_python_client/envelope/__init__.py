@@ -1,8 +1,8 @@
 from .factory import EnvelopeFactory
-from .models import Meta, Message
+from .models import Message, Meta
 
 __all__ = [
     "EnvelopeFactory",
-    "Meta",
     "Message",
+    "Meta",
 ]

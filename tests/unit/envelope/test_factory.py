@@ -1,10 +1,10 @@
 import itertools
 import json
 from collections.abc import Callable
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
-import pytest
 import conduit_protocol
+import pytest
 from jsonschema import validate
 
 from conduit_python_client.envelope import EnvelopeFactory
@@ -15,7 +15,7 @@ def make_id_generator() -> Callable[[], str]:
     return lambda: f"id-{next(counter)}"
 
 
-FIXED_TIMESTAMP = datetime(2026, 7, 29, 12, 0, 0, tzinfo=timezone.utc)
+FIXED_TIMESTAMP = datetime(2026, 7, 29, 12, 0, 0, tzinfo=UTC)
 
 
 class TestEnvelopeFactory:
@@ -78,15 +78,11 @@ class TestEnvelopeFactory:
         assert message.meta.stream_id == "parent-stream"
         assert message.meta.correlation_id == "parent-correlation"
 
-    def test_omits_extensions_when_not_provided(
-        self, factory: EnvelopeFactory
-    ) -> None:
+    def test_omits_extensions_when_not_provided(self, factory: EnvelopeFactory) -> None:
         message = factory.create_event("user.created", {})
         assert message.meta.extensions is None
 
-    def test_includes_extensions_when_provided(
-        self, factory: EnvelopeFactory
-    ) -> None:
+    def test_includes_extensions_when_provided(self, factory: EnvelopeFactory) -> None:
         message = factory.create_event(
             "user.created", {}, extensions={"trace": {"trace_id": "abc"}}
         )
