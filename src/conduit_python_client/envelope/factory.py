@@ -1,7 +1,7 @@
 """Envelope factory for constructing new Conduit messages."""
 
 from collections.abc import Callable
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any, Literal
 from uuid import uuid4
 
@@ -15,7 +15,7 @@ def _default_id_generator() -> str:
 
 
 def _default_clock() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 class EnvelopeFactory:
@@ -101,9 +101,9 @@ class EnvelopeFactory:
             type=type,
             version=version or self._default_version,
             source=source or self._source,
-            streamId=stream_id or self._id_generator(),
-            correlationId=correlation_id or id_,
-            causationId=causation_id,
+            stream_id=stream_id or self._id_generator(),
+            correlation_id=correlation_id or id_,
+            causation_id=causation_id,
             extensions=extensions,
             timestamp=self._clock(),
         )

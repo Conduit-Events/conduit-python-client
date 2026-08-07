@@ -1,11 +1,10 @@
 """Envelope models for the Conduit protocol."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any, Literal
-from uuid import UUID
-from pydantic import BaseModel, ConfigDict, Field
+
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, field_serializer
 from pydantic.alias_generators import to_camel
-from pydantic import AwareDatetime, field_serializer
 
 
 class Meta(BaseModel):
@@ -27,9 +26,7 @@ class Meta(BaseModel):
     @field_serializer("timestamp")
     def _serialize_timestamp(self, dt: datetime) -> str:
         return (
-            dt.astimezone(timezone.utc)
-            .isoformat(timespec="milliseconds")
-            .replace("+00:00", "Z")
+            dt.astimezone(UTC).isoformat(timespec="milliseconds").replace("+00:00", "Z")
         )
 
 
