@@ -1,6 +1,6 @@
 # Conduit Python Client
 
-> **Status: work in progress — implementation hasn't started yet.** This repository currently contains only project setup.
+> **Status: work in progress.** Envelope construction/validation and a RabbitMQ transport are implemented; there's no `Client` yet tying them together.
 
 The Conduit Python Client will be the second implementation of the Conduit message protocol, alongside [`conduit-node-client`](https://github.com/Conduit-Events/conduit-node-client). Its purpose is to prove the protocol is genuinely language-neutral rather than a Node.js convention, by implementing it independently in Python and demonstrating real interoperability with the Node client over RabbitMQ.
 
@@ -12,7 +12,15 @@ The message-envelope schema, RabbitMQ transport conventions, and cross-client co
 
 ## Status
 
-Nothing is implemented yet. Packaging, sync vs. async, which RabbitMQ library to use, and other foundational decisions are still open.
+- **Envelope** (`conduit_python_client.envelope`) — `Meta`/`Message` models and `EnvelopeFactory` for constructing and validating events/commands. Done.
+- **RabbitMQ transport** (`conduit_python_client.transports.rabbitmq`) — publish/subscribe over RabbitMQ via aio-pika, with dead-lettering and pattern-based dispatch. Done.
+- **Client** — not started yet. This is where child-message derivation (deriving `correlationId`/`causationId` for a message in response to a parent) will live, since it needs the parent message in scope, unlike the factory.
+
+Packaging is settled (`uv`, PEP 621), and the library is async throughout (`asyncio`/aio-pika) rather than sync.
+
+## Envelope
+
+`conduit_python_client.envelope` provides `Meta`/`Message` (pydantic models validated against the shared [`conduit-protocol`](https://github.com/Conduit-Events/conduit-protocol) schema) and `EnvelopeFactory`, which fills in `id`, `timestamp`, `correlationId` (defaults to the message's own `id` for a new causal chain), and `source` so callers only need to supply `type` and `data`.
 
 ## RabbitMQ transport
 
