@@ -93,5 +93,9 @@ class SchemaValidator:
         if validator is None:
             raise ValueError(f"Unknown schema type: {type_}")
 
-        validator.validate(data)
+        try:
+            validator.validate(data)
+        except jsonschema.exceptions.ValidationError as error:
+            raise ValueError(f"Invalid {type_}: {error.message}") from error
+
         return True

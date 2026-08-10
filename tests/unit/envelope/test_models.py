@@ -164,5 +164,5 @@ class TestMessageWireRoundTrip:
         assert round_tripped == message
 
     def test_from_wire_json_rejects_invalid_payload(self) -> None:
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValueError, match="Invalid event"):
             Message.from_wire_json('{"meta": {"kind": "event"}, "data": {}}')
