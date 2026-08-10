@@ -250,9 +250,19 @@ class RabbitMqTransport(Transport):
 
         if remaining:
             self._subscriptions_by_queue[subscription.queue] = remaining
-            return
+        else:
+            self._subscriptions_by_queue.pop(subscription.queue, None)
 
-        self._subscriptions_by_queue.pop(subscription.queue, None)
+        pattern_still_bound = any(
+            item.pattern == subscription.pattern for item in remaining
+        )
+
+        if not pattern_still_bound and self._exchange is not None:
+            queue = self._queues[subscription.queue]
+            await queue.unbind(self._exchange, routing_key=subscription.pattern)
+
+        if remaining:
+            return
 
         consumer_tag = self._consumers_by_queue.pop(subscription.queue, None)
 

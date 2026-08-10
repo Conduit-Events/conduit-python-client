@@ -231,6 +231,53 @@ class TestRabbitMqTransportIntegration:
 
         assert handled is False
 
+    async def test_unsubscribe_from_a_shared_queue_does_not_leak_the_pattern_binding(
+        self, make_transport
+    ):
+        """Regression test: unsubscribing "user.created" from a queue that
+        also serves "random.gossip" must unbind the now-unused "user.created"
+        routing key, not just drop the local subscription bookkeeping. Before
+        the fix, the queue binding for "user.created" stayed live, so
+        publishing to it kept delivering messages to the queue with no
+        matching local subscription - silently acked and dropped instead of
+        never reaching the queue at all.
+        """
+        transport, names = await make_transport()
+
+        handled: list[str] = []
+
+        async def user_handler(_event, _ctx):
+            handled.append("user.created")
+
+        async def gossip_handler(_event, _ctx):
+            handled.append("random.gossip")
+
+        user_subscription = await transport.subscribe("user.created", user_handler)
+        await transport.subscribe("random.gossip", gossip_handler)
+
+        await user_subscription["unsubscribe"]()
+
+        admin_connection = await aio_pika.connect(RABBITMQ_URL)
+        admin_channel = await admin_connection.channel()
+
+        try:
+            queue = await admin_channel.get_queue(names.queue)
+            messages_before = (await queue.declare()).message_count
+
+            await transport.publish(create_message("user.created"))
+            await asyncio.sleep(0.5)
+
+            messages_after = (await queue.declare()).message_count
+            assert messages_after == messages_before
+        finally:
+            await admin_channel.close()
+            await admin_connection.close()
+
+        await transport.publish(create_message("random.gossip"))
+        await asyncio.sleep(0.5)
+
+        assert handled == ["random.gossip"]
+
     async def test_malformed_body_is_rejected_without_disrupting_later_messages(
         self, make_transport
     ):
