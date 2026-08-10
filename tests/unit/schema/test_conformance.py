@@ -5,10 +5,11 @@ rejects what it doesn't - not just that this client's own hand-written
 tests agree with its own implementation.
 
 See conduit-protocol/conformance/README.md for the fixture format and the
-rules being checked. Unlike the creation fixtures (not yet wired up in this
-client - see conduit-node-client's conformance.test.js for that family),
-these don't exercise message construction at all: each fixture is already a
-complete envelope, and the only question is accept or reject.
+rules being checked. The protocol's fixtures/creation/ family (derivation
+rules) is run separately, in tests/unit/conformance/test_creation_fixtures.py.
+Unlike creation fixtures, these don't exercise message construction at all:
+each fixture is already a complete envelope, and the only question is
+accept or reject.
 """
 
 import json
