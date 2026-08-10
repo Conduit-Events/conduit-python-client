@@ -1,2 +1,5 @@
-def hello() -> str:
-    return "Hello from conduit-python-client!"
+from .client import Client
+
+__all__ = [
+    "Client",
+]
