@@ -93,16 +93,18 @@ class EnvelopeFactory:
         source: str | None = None,
         version: str | None = None,
     ) -> Message:
-        id_ = self._id_generator()
+        message_id = self._id_generator()
 
         meta = Meta(
-            id=id_,
+            id=message_id,
             kind=kind,
             type=type,
-            version=version or self._default_version,
-            source=source or self._source,
-            stream_id=stream_id or self._id_generator(),
-            correlation_id=correlation_id or id_,
+            version=(version if version is not None else self._default_version),
+            source=(source if source is not None else self._source),
+            stream_id=(stream_id if stream_id is not None else self._id_generator()),
+            correlation_id=(
+                correlation_id if correlation_id is not None else message_id
+            ),
             causation_id=causation_id,
             extensions=extensions,
             timestamp=self._clock(),

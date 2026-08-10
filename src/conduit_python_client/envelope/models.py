@@ -1,10 +1,15 @@
 """Envelope models for the Conduit protocol."""
 
+import json
 from datetime import UTC, datetime
 from typing import Any, Literal
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, field_serializer
 from pydantic.alias_generators import to_camel
+
+from ..schema import SchemaValidator
+
+_protocol_validator = SchemaValidator()
 
 
 class Meta(BaseModel):
@@ -40,4 +45,6 @@ class Message(BaseModel):
 
     @classmethod
     def from_wire_json(cls, raw: str | bytes) -> Message:
-        return cls.model_validate_json(raw)
+        data = json.loads(raw)
+        _protocol_validator.validate_envelope(data)
+        return cls.model_validate(data)
