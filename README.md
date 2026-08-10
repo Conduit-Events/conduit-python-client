@@ -19,6 +19,8 @@ The message-envelope schema, RabbitMQ transport conventions, and cross-client co
 
 Packaging is settled (`uv`, PEP 621), and the library is async throughout (`asyncio`/aio-pika) rather than sync.
 
+CI runs formatting/linting, type-checking, unit tests, and integration tests against a RabbitMQ service container on every PR (see `.github/workflows/ci.yml`).
+
 ## Client
 
 `conduit_python_client.Client` is the main entry point: it wires together an `EnvelopeFactory`, a `SchemaValidator`, and a transport (a `RabbitMqTransport` by default) behind `emit()`/`command()`/`on()`/`subscribe()`.
