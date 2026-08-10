@@ -118,19 +118,30 @@ class Client:
         self._stopping: asyncio.Task[Client] | None = None
 
     async def start(self) -> Client:
-        if self._state == "started":
-            return self
+        while True:
+            if self._state == "started":
+                return self
 
-        if self._starting is not None:
-            return await self._starting
+            if self._starting is not None:
+                return await self._starting
 
-        self._state = "starting"
-        self._starting = asyncio.ensure_future(self._do_start())
+            # A stop() is still tearing down the transport. Let it settle
+            # before starting a fresh connect - otherwise connect() and
+            # disconnect() could run concurrently and leave a connection
+            # open that whoever called stop() believes is closed.
+            if self._stopping is not None:
+                await self._settle(self._stopping)
+                continue
 
-        try:
-            return await self._starting
-        finally:
-            self._starting = None
+            self._state = "starting"
+            task = asyncio.create_task(self._do_start())
+            self._starting = task
+
+            try:
+                return await task
+            finally:
+                if self._starting is task:
+                    self._starting = None
 
     async def _do_start(self) -> Client:
         try:
@@ -163,19 +174,37 @@ class Client:
             raise
 
     async def stop(self) -> Client:
-        if self._state == "stopped":
-            return self
+        while True:
+            if self._state == "stopped":
+                return self
 
-        if self._stopping is not None:
-            return await self._stopping
+            if self._stopping is not None:
+                return await self._stopping
 
-        self._state = "stopping"
-        self._stopping = asyncio.ensure_future(self._do_stop())
+            # A start() is still connecting. Let it settle before
+            # disconnecting - otherwise connect() and disconnect() could run
+            # concurrently and leave a connection open that whoever called
+            # stop() believes is closed.
+            if self._starting is not None:
+                await self._settle(self._starting)
+                continue
 
+            self._state = "stopping"
+            task = asyncio.create_task(self._do_stop())
+            self._stopping = task
+
+            try:
+                return await task
+            finally:
+                if self._stopping is task:
+                    self._stopping = None
+
+    @staticmethod
+    async def _settle(task: asyncio.Task[Client]) -> None:
         try:
-            return await self._stopping
-        finally:
-            self._stopping = None
+            await task
+        except Exception:  # noqa: BLE001, S110 - the competing call's own caller already handles/raises this outcome; we only need it to have finished
+            pass
 
     async def _do_stop(self) -> Client:
         try:

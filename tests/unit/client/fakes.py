@@ -34,6 +34,7 @@ class FakeTransport:
         self.subscribe_error: Exception | None = None
 
         self.connect_impl: Callable[[], Any] | None = None
+        self.disconnect_impl: Callable[[], Any] | None = None
         self.subscribe_impl: Callable[[dict[str, Any]], Any] | None = None
 
     async def connect(self) -> None:
@@ -52,6 +53,11 @@ class FakeTransport:
 
         if self.disconnect_error is not None:
             raise self.disconnect_error
+
+        if self.disconnect_impl is not None:
+            result = self.disconnect_impl()
+            if inspect.isawaitable(result):
+                await result
 
     async def publish(self, message: dict[str, Any], **options: Any) -> Any:
         self.publish_calls.append({"message": message, "options": options})
