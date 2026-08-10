@@ -103,7 +103,7 @@ wheels = [
 [[package]]
 name = "conduit-protocol"
 version = "0.1.0"
-source = { git = "https://github.com/Conduit-Events/conduit-protocol#8b0ece2b74bec5fbd5a346e89aea28f946c65dc1" }
+source = { git = "https://github.com/Conduit-Events/conduit-protocol#868e4bd1613a338560768438704e962864cd7a5b" }
 
 [[package]]
 name = "conduit-python-client"
