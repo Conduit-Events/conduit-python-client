@@ -206,6 +206,68 @@ class TestStop:
         assert len(transport.subscribe_calls) == 2
 
 
+class TestLifecycleInterleaving:
+    async def test_stop_waits_for_an_in_flight_start_before_disconnecting(
+        self,
+    ) -> None:
+        client, transport, _, _ = make_client()
+        connecting = asyncio.get_running_loop().create_future()
+        transport.connect_impl = lambda: connecting
+
+        starting = asyncio.ensure_future(client.start())
+        await tick()
+        assert transport.connect_calls == 1
+
+        stopping = asyncio.ensure_future(client.stop())
+        await tick()
+
+        # start() hasn't resolved connect() yet, so stop() must not have
+        # touched the transport - connect() and disconnect() must never run
+        # concurrently.
+        assert transport.disconnect_calls == 0
+
+        connecting.set_result(None)
+
+        assert await starting is client
+        assert await stopping is client
+
+        assert transport.connect_calls == 1
+        assert transport.disconnect_calls == 1
+
+        with pytest.raises(RuntimeError, match="must be started"):
+            await client.emit("user.created", {})
+
+    async def test_start_waits_for_an_in_flight_stop_before_reconnecting(
+        self,
+    ) -> None:
+        client, transport, _, _ = make_client()
+        await client.start()
+        assert transport.connect_calls == 1
+
+        disconnecting = asyncio.get_running_loop().create_future()
+        transport.disconnect_impl = lambda: disconnecting
+
+        stopping = asyncio.ensure_future(client.stop())
+        await tick()
+        assert transport.disconnect_calls == 1
+
+        starting = asyncio.ensure_future(client.start())
+        await tick()
+
+        # stop() hasn't resolved disconnect() yet, so start() must not have
+        # reconnected - connect() and disconnect() must never run
+        # concurrently.
+        assert transport.connect_calls == 1
+
+        disconnecting.set_result(None)
+
+        assert await stopping is client
+        assert await starting is client
+
+        assert transport.disconnect_calls == 1
+        assert transport.connect_calls == 2
+
+
 class TestPublishing:
     async def test_rejects_emit_before_the_client_is_started(self) -> None:
         client, _, _, _ = make_client()
